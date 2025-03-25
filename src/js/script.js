@@ -1,6 +1,6 @@
 /* global Handlebars, utils, dataSource */ // eslint-disable-line no-unused-vars
 
-{
+
   'use strict';
 
 const select = {
@@ -63,5 +63,37 @@ const select = {
     },
   };
 
+  app.initMenu()
+    const testProduct = new Product();
+  console.log('testProduct:', testProduct);
+  
+
+  app.init()
+  const app = {
+    init: function () {
+      console.log('App initialization...');
+  
+      generateTitleLinks();
+      generateTags();
+      generateAuthors(); // Jeśli dodałeś obsługę autorów
+  
+      thisApp.initMenu(); // Dodanie initMenu na końcu
+    },
+  
+    initMenu: function () {
+      console.log('Menu initialization...');
+      // Tutaj kod obsługujący menu
+    },
+  };
+  
+  // Uruchomienie aplikacji
   app.init();
+
+
+class Product{
+  constructor(){
+    const thisProduct = this;
+
+    console.log('new Product:', thisProduct);
+  }
 }
