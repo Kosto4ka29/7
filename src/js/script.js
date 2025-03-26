@@ -52,7 +52,30 @@ const select = {
     menuProduct: Handlebars.compile(document.querySelector(select.templateOf.menuProduct).innerHTML),
   };
 
+  class Product{
+    constructor(){
+      const thisProduct = this;
+  
+      console.log('new Product:', thisProduct);
+    }
+  }
+
+  
+
   const app = {
+    
+    initMenu: function () {
+      const testProduct = new Product();
+      console.log('testProduct:', testProduct);
+    },
+
+    initData: function(){
+      const thisApp = this;
+  
+      thisApp.data = dataSource;
+      console.log('thisApp.data:', thisApp.data);
+    },
+
     init: function(){
       const thisApp = this;
       console.log('*** App starting ***');
@@ -60,40 +83,16 @@ const select = {
       console.log('classNames:', classNames);
       console.log('settings:', settings);
       console.log('templates:', templates);
+
+      thisApp.initData();
+      thisApp.initMenu();
     },
   };
 
-  app.initMenu()
-    const testProduct = new Product();
-  console.log('testProduct:', testProduct);
   
-
-  app.init()
-  const app = {
-    init: function () {
-      console.log('App initialization...');
-  
-      generateTitleLinks();
-      generateTags();
-      generateAuthors(); // Jeśli dodałeś obsługę autorów
-  
-      thisApp.initMenu(); // Dodanie initMenu na końcu
-    },
-  
-    initMenu: function () {
-      console.log('Menu initialization...');
-      // Tutaj kod obsługujący menu
-    },
-  };
-  
-  // Uruchomienie aplikacji
-  app.init();
+   // Uruchomienie aplikacji
+   app.init();
+ 
 
 
-class Product{
-  constructor(){
-    const thisProduct = this;
 
-    console.log('new Product:', thisProduct);
-  }
-}

@@ -1,6 +1,6 @@
 /* global Handlebars, utils, dataSource */ // eslint-disable-line no-unused-vars
 
-{
+
   'use strict';
 
 const select = {
@@ -52,7 +52,30 @@ const select = {
     menuProduct: Handlebars.compile(document.querySelector(select.templateOf.menuProduct).innerHTML),
   };
 
+  class Product{
+    constructor(){
+      const thisProduct = this;
+  
+      console.log('new Product:', thisProduct);
+    }
+  }
+
+  
+
   const app = {
+    
+    initMenu: function () {
+      const testProduct = new Product();
+      console.log('testProduct:', testProduct);
+    },
+
+    initData: function(){
+      const thisApp = this;
+  
+      thisApp.data = dataSource;
+      console.log('thisApp.data:', thisApp.data);
+    },
+
     init: function(){
       const thisApp = this;
       console.log('*** App starting ***');
@@ -60,8 +83,16 @@ const select = {
       console.log('classNames:', classNames);
       console.log('settings:', settings);
       console.log('templates:', templates);
+
+      thisApp.initData();
+      thisApp.initMenu();
     },
   };
 
-  app.init();
-}
+  
+   // Uruchomienie aplikacji
+   app.init();
+ 
+
+
+
