@@ -63,6 +63,7 @@ class Product {
 
     // Wywołanie metody renderInMenu po stworzeniu instancji
     thisProduct.renderInMenu();
+    thisProduct.initAccordion();
   }
 
   renderInMenu() {
@@ -80,7 +81,37 @@ class Product {
     // Dodanie stworzonego elementu na stronę
     menuContainer.appendChild(thisProduct.element);
   }
+
+  initAccordion() {
+    const thisProduct = this;
+  
+    /* znajdź wyzwalacz klikalny */
+    const clickableTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+  
+    /* START: add event listener to clickable trigger on event click */
+    clickableTrigger.addEventListener('click', function(event) {
+      /* prevent default action for event */
+      event.preventDefault();
+  
+      /* find active product (product that has active class) */
+      const activeProduct = document.querySelector(select.all.menuProducts + '.' + classNames.menuProduct.wrapperActive);
+  
+      /* if there is active product and it's not thisProduct.element, remove class active from it */
+      if (activeProduct && activeProduct !== thisProduct.element) {
+        activeProduct.classList.remove(classNames.menuProduct.wrapperActive);
+      }
+  
+      /* toggle active class on thisProduct.element */
+      thisProduct.element.classList.toggle(classNames.menuProduct.wrapperActive);
+    }); 
+
+  
+  
+    
+
+  }
 }
+
 
 
 
