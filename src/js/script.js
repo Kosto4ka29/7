@@ -1,151 +1,135 @@
-/* global Handlebars, utils, dataSource */ // eslint-disable-line no-unused-vars
+/* global dataSource */
+/* global utils */
+
 
 'use strict';
 
+// Definiowanie selektorów
 const select = {
-  templateOf: {
-    menuProduct: "#template-menu-product",
-  },
   containerOf: {
-    menu: '#product-list',
-    cart: '#cart',
-  },
-  all: {
-    menuProducts: '#product-list > .product',
-    menuProductsActive: '#product-list > .product.active',
-    formInputs: 'input, select',
-  },
-  menuProduct: {
-    clickable: '.product__header',
-    form: '.product__order',
-    priceElem: '.product__total-price .price',
-    imageWrapper: '.product__images',
-    amountWidget: '.widget-amount',
-    cartButton: '[href="#add-to-cart"]',
-  },
-  widgets: {
-    amount: {
-      input: 'input[name="amount"]',
-      linkDecrease: 'a[href="#less"]',
-      linkIncrease: 'a[href="#more"]',
-    },
-  },
-};
-
-const classNames = {
-  menuProduct: {
-    wrapperActive: 'active',
-    imageVisible: 'active',
-  },
-};
-
-const settings = {
-  amountWidget: {
-    defaultValue: 1,
-    defaultMin: 0,
-    defaultMax: 10,
+    menu: '#product-list', // kontener dla listy produktów
   }
 };
 
+// Kompilacja szablonu Handlebars
 const templates = {
-  menuProduct: Handlebars.compile(document.querySelector(select.templateOf.menuProduct).innerHTML),
+  menuProduct: Handlebars.compile(document.querySelector('#template-menu-product').innerHTML),
 };
 
+// Klasa dla produktu
 class Product {
   constructor(id, data) {
     const thisProduct = this;
 
-    // Przypisanie argumentów do instancji
+    // Przypisanie właściwości
     thisProduct.id = id;
     thisProduct.data = data;
+    thisProduct.price = data.price; // Cena początkowa
+    thisProduct.basePrice = data.price; // Cena bazowa
+    thisProduct.optionsPrice = 0; // Cena dodatkowa (z opcji)
 
-    console.log('new Product:', thisProduct);
-
-    // Wywołanie metody renderInMenu po stworzeniu instancji
+    // Wywołanie renderInMenu po stworzeniu instancji produktu
     thisProduct.renderInMenu();
     thisProduct.initAccordion();
-  }
-
-  renderInMenu() {
-    const thisProduct = this;
-
-    // Generowanie HTML
-    const generatedHTML = templates.menuProduct(thisProduct.data);
-
-    // Tworzenie elementu DOM
-    thisProduct.element = utils.createDOMFromHTML(generatedHTML);
-
-    // Znalezienie kontenera menu
-    const menuContainer = document.querySelector(select.containerOf.menu);
-
-    // Dodanie stworzonego elementu na stronę
-    menuContainer.appendChild(thisProduct.element);
+    thisProduct.initOptions(); // Inicjalizacja opcji (checkbox, radio)
+    thisProduct.updatePrice(); // Inicjalizacja ceny
   }
 
   initAccordion() {
     const thisProduct = this;
   
-    /* znajdź wyzwalacz klikalny */
-    const clickableTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+    const clickableTrigger = thisProduct.element.querySelector('.product__header');
   
-    /* START: add event listener to clickable trigger on event click */
-    clickableTrigger.addEventListener('click', function(event) {
-      /* prevent default action for event */
-      event.preventDefault();
+    clickableTrigger.addEventListener('click', function () {
+      thisProduct.element.classList.toggle('active');
+    });
+  }
   
-      /* find active product (product that has active class) */
-      const activeProduct = document.querySelector(select.all.menuProducts + '.' + classNames.menuProduct.wrapperActive);
-  
-      /* if there is active product and it's not thisProduct.element, remove class active from it */
-      if (activeProduct && activeProduct !== thisProduct.element) {
-        activeProduct.classList.remove(classNames.menuProduct.wrapperActive);
+
+  // Renderowanie produktu w menu
+  renderInMenu() {
+    const thisProduct = this;
+
+    // Generowanie HTML dla produktu
+    const generatedHTML = templates.menuProduct(thisProduct.data);
+
+    // Tworzenie elementu DOM z wygenerowanego HTML
+    thisProduct.element = utils.createDOMFromHTML(generatedHTML);
+
+    // Dodanie elementu do kontenera menu
+    const menuContainer = document.querySelector(select.containerOf.menu);
+    menuContainer.appendChild(thisProduct.element);
+  }
+
+  // Inicjalizacja opcji dla produktów (checkbox, radio, select)
+  initOptions() {
+    const thisProduct = this;
+
+    // Znalezienie wszystkich opcji (checkbox, radio, select) w produkcie
+    const options = thisProduct.element.querySelectorAll('.product__params input');
+
+    // Dodanie nasłuchiwania na zmiany w opcjach
+    for (let option of options) {
+      option.addEventListener('change', function() {
+        thisProduct.updatePrice(); // Zaktualizuj cenę po zmianie opcji
+      });
+    }
+  }
+
+  // Funkcja do obliczania ceny po uwzględnieniu opcji
+  updatePrice() {
+    const thisProduct = this;
+
+    // Zresetowanie dodatkowej ceny
+    let newPrice = thisProduct.basePrice;
+
+    // Dodanie ceny opcji (checkbox, radio, select)
+    const options = thisProduct.element.querySelectorAll('.product__params input');
+    for (let option of options) {
+      if (option.checked) {
+        const price = parseFloat(option.dataset.price); // Pobranie ceny z atrybutu data-price
+        newPrice += price; // Zwiększenie ceny o wartość opcji
       }
-  
-      /* toggle active class on thisProduct.element */
-      thisProduct.element.classList.toggle(classNames.menuProduct.wrapperActive);
-    }); 
+    }
 
-  
-  
-    
-
+    // Aktualizacja ceny na stronie
+    const priceElement = thisProduct.element.querySelector('.product__total-price .price');
+    priceElement.textContent = newPrice.toFixed(2); // Ustawienie nowej ceny na stronie
+    thisProduct.optionsPrice = newPrice - thisProduct.basePrice; // Zapamiętanie dodatkowej ceny
   }
 }
 
-
-
-
+// Klasa dla aplikacji
 const app = {
+  data: {}, // Zmienna przechowująca dane o produktach
 
-  initMenu: function () {
-    const thisApp = this;
-    
-    console.log('thisApp.data:', thisApp.data); // Sprawdzenie czy dane są wczytane poprawnie
-    
-    for (let productId in thisApp.data.products) {
-      new Product(productId, thisApp.data.products[productId]); // Tworzenie instancji produktu
-    }
-  },
-
+  // Funkcja inicjalizująca dane produktów
   initData: function () {
     const thisApp = this;
 
+    // Załadowanie danych z dataSource
     thisApp.data = dataSource;
-    console.log('thisApp.data:', thisApp.data);
   },
 
+  // Funkcja inicjalizująca menu
+  initMenu: function () {
+    const thisApp = this;
+
+    // Iteracja po wszystkich produktach i tworzenie instancji klasy Product
+    for (let productId in thisApp.data.products) {
+      new Product(productId, thisApp.data.products[productId]);
+    }
+  },
+
+  // Funkcja inicjalizująca aplikację
   init: function () {
     const thisApp = this;
-    console.log('*** App starting ***');
-    console.log('thisApp:', thisApp);
-    console.log('classNames:', classNames);
-    console.log('settings:', settings);
-    console.log('templates:', templates);
 
-    thisApp.initData();
-    thisApp.initMenu();
+    thisApp.initData(); // Inicjalizacja danych
+    thisApp.initMenu(); // Inicjalizacja menu
   },
 };
+
 
 // Uruchomienie aplikacji
 app.init();
