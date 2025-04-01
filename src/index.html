@@ -70,46 +70,64 @@
       </div> <!-- .description -->
       <div class="product__wrapper"> <!-- details -->
         <form class="product__order">
-          <ul class="product__params"> <!-- params -->
-            {{#each params as |param paramId| }}
-            {{#ifEquals type "checkboxes"}}
-            <li> <!-- checkboxes -->
-              <h3 class="product__params-title">{{{ label }}}</h3>
-              {{#each options}}
-              <div class="checkbox"> <!-- checkbox -->
-                <label>
-                  <input type="checkbox" name="{{ paramId }}" value="{{ @key }}" data-price="{{ price }}" id="{{ @key }}" {{#if default}}checked{{/if}} >
-                  <span class="checkbox__checkmark"></span>
-                  {{{ label }}} (${{{ price }}})
-                </label>
-              </div>
-              {{/each}}
-            </li>
-            {{/ifEquals}}
-            {{#ifEquals type "radios"}}
-            <li> <!-- radios -->
-              <h3 class="product__params-title">{{{ label }}}</h3>
-              {{#each options}}
-              <div class="checkbox checkbox--round"> <!-- radio -->
-                <label>
-                  {{{ label }}} (${{{ price }}})
-                  <input type="radio" name="{{ paramId }}" value="{{ @key }}" data-price="{{ price }}" id="{{ @key }}" {{#if default}}checked{{/if}}>
-                  <span class="checkbox__checkmark"></span>
-                </label>
-              </div>
-              {{/each}}
-            </li>
-            {{/ifEquals}}
-            {{#ifEquals type "select"}}
-            <li> <!-- select -->
-              <h3 class="product__params-title">{{{ label }}}</h3>
-              <select name="{{ paramId }}">
-                {{#each options}}
-                <option value="{{ @key }}" {{#if default}}selected{{/if}}>{{{ label }}} (${{{ price }}})</option>
-                {{/each}}
-              </select>
-            </li>
-            {{/ifEquals}}
+          <ul class="product__params">
+            {{#each params}}
+              {{#with this as |param|}}
+                {{#ifEquals param.type "checkboxes"}}
+                  <li>
+                    <h3 class="product__params-title">{{ param.label }}</h3>
+                    {{#each param.options}}
+                      <div class="checkbox">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="{{@../key}}"
+                            value="{{@key}}"
+                            data-price="{{price}}"
+                            id="{{@key}}"
+                            {{#if default}}checked{{/if}}>
+                          <span class="checkbox__checkmark"></span>
+                          {{ label }} (${{ price }})
+                        </label>
+                      </div>
+                    {{/each}}
+                  </li>
+                {{/ifEquals}}
+          
+                {{#ifEquals param.type "radios"}}
+                  <li>
+                    <h3 class="product__params-title">{{ param.label }}</h3>
+                    {{#each param.options}}
+                      <div class="checkbox checkbox--round">
+                        <label>
+                          {{ label }} (${{ price }})
+                          <input
+                            type="radio"
+                            name="{{@../key}}"
+                            value="{{@key}}"
+                            data-price="{{price}}"
+                            id="{{@key}}"
+                            {{#if default}}checked{{/if}}>
+                          <span class="checkbox__checkmark"></span>
+                        </label>
+                      </div>
+                    {{/each}}
+                  </li>
+                {{/ifEquals}}
+          
+                {{#ifEquals param.type "select"}}
+                  <li>
+                    <h3 class="product__params-title">{{ param.label }}</h3>
+                    <select name="{{@key}}">
+                      {{#each param.options}}
+                        <option value="{{@key}}" data-price="{{price}}" {{#if default}}selected{{/if}}>
+                          {{ label }} (${{ price }})
+                        </option>
+                      {{/each}}
+                    </select>
+                  </li>
+                {{/ifEquals}}
+              {{/with}}
             {{/each}}
           </ul>
           <div class="amount"> <!-- controls -->

@@ -8,8 +8,13 @@
 const select = {
   containerOf: {
     menu: '#product-list', // kontener dla listy produktów
-  }
+  },
+  menuProduct: {
+    imageWrapper: '.product_images',
+  },
 };
+
+
 
 // Kompilacja szablonu Handlebars
 const templates = {
@@ -30,9 +35,16 @@ class Product {
 
     // Wywołanie renderInMenu po stworzeniu instancji produktu
     thisProduct.renderInMenu();
+    thisProduct.getElements();
     thisProduct.initAccordion();
     thisProduct.initOptions(); // Inicjalizacja opcji (checkbox, radio)
     thisProduct.updatePrice(); // Inicjalizacja ceny
+  }
+
+  getElements(){
+    const thisProduct = this;
+
+    thisProduct.imageWrapper = thisProduct.element.querySelector(select.menuProduct.imageWrapper);
   }
 
   initAccordion() {
@@ -41,25 +53,35 @@ class Product {
     const clickableTrigger = thisProduct.element.querySelector('.product__header');
   
     clickableTrigger.addEventListener('click', function () {
-      thisProduct.element.classList.toggle('active');
+      const isActive = thisProduct.element.classList.contains('active');
+  
+      // Zwiń wszystkie produkty
+      const allProducts = document.querySelectorAll('.product');
+      for (let product of allProducts) {
+        product.classList.remove('active');
+      }
+  
+      // Jeśli wcześniej nie był aktywny — otwórz go znowu
+      if (!isActive) {
+        thisProduct.element.classList.add('active');
+      }
     });
   }
-  
 
   // Renderowanie produktu w menu
   renderInMenu() {
     const thisProduct = this;
-
-    // Generowanie HTML dla produktu
+  
     const generatedHTML = templates.menuProduct(thisProduct.data);
-
-    // Tworzenie elementu DOM z wygenerowanego HTML
+    console.log('HTML wygenerowany przez Handlebars:', generatedHTML);
+  
     thisProduct.element = utils.createDOMFromHTML(generatedHTML);
-
-    // Dodanie elementu do kontenera menu
+    console.log('Element DOM:', thisProduct.element);
+  
     const menuContainer = document.querySelector(select.containerOf.menu);
     menuContainer.appendChild(thisProduct.element);
   }
+  
 
   // Inicjalizacja opcji dla produktów (checkbox, radio, select)
   initOptions() {
@@ -76,28 +98,57 @@ class Product {
     }
   }
 
-  // Funkcja do obliczania ceny po uwzględnieniu opcji
   updatePrice() {
     const thisProduct = this;
-
-    // Zresetowanie dodatkowej ceny
+  
     let newPrice = thisProduct.basePrice;
-
-    // Dodanie ceny opcji (checkbox, radio, select)
-    const options = thisProduct.element.querySelectorAll('.product__params input');
-    for (let option of options) {
-      if (option.checked) {
-        const price = parseFloat(option.dataset.price); // Pobranie ceny z atrybutu data-price
-        newPrice += price; // Zwiększenie ceny o wartość opcji
+  
+    const formData = utils.serializeFormToObject(thisProduct.element);
+  
+    for (let paramId in thisProduct.data.params) {
+      const param = thisProduct.data.params[paramId];
+  
+      for (let optionId in param.options) {
+        const option = param.options[optionId];
+  
+        const optionSelected = formData[paramId] && (
+          (Array.isArray(formData[paramId]) && formData[paramId].includes(optionId)) ||
+          formData[paramId] === optionId
+        );
+  
+        // Cena
+        if (optionSelected && !option.default) {
+          newPrice += option.price;
+        } else if (!optionSelected && option.default) {
+          newPrice -= option.price;
+        }
+  
+        // Obrazki
+        if (thisProduct.imageWrapper) {
+          const imageClass = `.${paramId}-${optionId}`;
+          const image = thisProduct.imageWrapper.querySelector(imageClass);
+  
+          if (image) {
+            if (optionSelected) {
+              image.classList.add('active');
+            } else {
+              image.classList.remove('active');
+            }
+          }
+        }
       }
     }
-
+  
+  
+  
     // Aktualizacja ceny na stronie
     const priceElement = thisProduct.element.querySelector('.product__total-price .price');
-    priceElement.textContent = newPrice.toFixed(2); // Ustawienie nowej ceny na stronie
-    thisProduct.optionsPrice = newPrice - thisProduct.basePrice; // Zapamiętanie dodatkowej ceny
+    priceElement.textContent = newPrice.toFixed(2);
+  
+    // Zapamiętujemy dodatkową cenę z opcji
+    thisProduct.optionsPrice = newPrice - thisProduct.basePrice;
   }
-}
+} 
 
 // Klasa dla aplikacji
 const app = {
