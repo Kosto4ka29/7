@@ -11,7 +11,22 @@ const select = {
   },
   menuProduct: {
     imageWrapper: '.product__images',
-
+    amountwidget: '.widget-amount',
+  },
+  widgets: {
+    amount: {
+      input: 'input.amount',
+      linkDecrease: 'a[href="#less"]',
+      linkIncrease: 'a[href="#more"]',
+    },
+  }
+  
+};
+const settings = {
+  amountWidget: {
+    defaultValue: 1,
+    defaultMin: 0,
+    defaultMax: 10,
   },
 };
 
@@ -38,15 +53,22 @@ class Product {
     thisProduct.renderInMenu();
     thisProduct.getElements();
     thisProduct.initAccordion();
-    thisProduct.initOptions(); // Inicjalizacja opcji (checkbox, radio)
+    thisProduct.initOptions();
+    thisProduct.initAmountWidget();
     thisProduct.updatePrice(); // Inicjalizacja ceny
   }
 
   getElements(){
     const thisProduct = this;
-
+  
     thisProduct.imageWrapper = thisProduct.element.querySelector(select.menuProduct.imageWrapper);
+    thisProduct.amountWidgetElem = thisProduct.element.querySelector(select.menuProduct.amountwidget);
+  
+    if (!thisProduct.amountWidgetElem) {
+      console.warn('⚠️ Nie znaleziono widgetu amount dla produktu:', thisProduct.id);
+    }
   }
+  
 
   initAccordion() {
     const thisProduct = this;
@@ -142,7 +164,9 @@ class Product {
       }
     }
   
-    const amount = parseInt(formData.amount) || 1;
+    const amount = parseInt(formData.amount);
+  if (isNaN(amount) || amount < 0) return;
+
     newPrice *= amount;
   
     const priceElement = thisProduct.element.querySelector('.product__total-price .price');
@@ -152,7 +176,103 @@ class Product {
   
     thisProduct.optionsPrice = newPrice - (thisProduct.basePrice * amount);
   }
-}  
+  initAmountWidget() {
+    const thisProduct = this;
+  
+    if (thisProduct.amountWidgetElem) {
+      thisProduct.amountWidget = new AmountWidget(thisProduct.amountWidgetElem);
+  
+      thisProduct.amountWidgetElem.addEventListener('updated', () => {
+        thisProduct.updatePrice(); // przelicza cenę po zmianie ilości
+      });
+    }
+  }
+  
+  
+  
+  
+}
+
+class AmountWidget {
+  constructor(element) {
+    const thisWidget = this;
+
+    thisWidget.getElements(element);
+    thisWidget.initActions();
+    const inputValue = thisWidget.input.value;
+
+    if (inputValue !== '') {
+  thisWidget.setValue(inputValue);
+      } else {
+  thisWidget.setValue(settings.amountWidget.defaultValue);
+    }
+
+  }
+
+  getElements(element) {
+    const thisWidget = this;
+
+    thisWidget.element = element;
+    thisWidget.input = thisWidget.element.querySelector(select.widgets.amount.input);
+    thisWidget.linkDecrease = thisWidget.element.querySelector(select.widgets.amount.linkDecrease);
+    thisWidget.linkIncrease = thisWidget.element.querySelector(select.widgets.amount.linkIncrease);
+  }
+
+  setValue(value) {
+    const thisWidget = this;
+  
+    const newValue = parseInt(value);
+  
+    const isValid =
+      !isNaN(newValue) &&
+      newValue >= settings.amountWidget.defaultMin &&
+      newValue <= settings.amountWidget.defaultMax;
+  
+    if (isValid && newValue !== thisWidget.value) {
+      thisWidget.value = newValue;
+      thisWidget.input.value = thisWidget.value;
+      thisWidget.announce();
+    } else {
+      // Przywróć poprzednią wartość, jeśli wpisano coś nieprawidłowego
+      thisWidget.input.value = thisWidget.value;
+    }
+  }
+  
+
+  // ⬇⬇⬇ TO DODAJ ⬇⬇⬇
+  initActions() {
+    const thisWidget = this;
+  
+    thisWidget.input.addEventListener('change', () => {
+      thisWidget.setValue(thisWidget.input.value);
+    });
+  
+    thisWidget.linkDecrease.addEventListener('click', (event) => {
+      event.preventDefault();
+      thisWidget.setValue(thisWidget.value - 1);
+    });
+  
+    thisWidget.linkIncrease.addEventListener('click', (event) => {
+      event.preventDefault();
+      thisWidget.setValue(thisWidget.value + 1);
+    });
+  }
+
+  
+
+  announce() {
+    const thisWidget = this;
+
+    const event = new Event('updated');
+    thisWidget.element.dispatchEvent(event);
+  }
+
+  getValue() {
+    return this.value;
+  }
+}
+  
+
 
 // Klasa dla aplikacji
 const app = {
