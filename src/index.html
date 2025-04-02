@@ -71,64 +71,62 @@
       <div class="product__wrapper"> <!-- details -->
         <form class="product__order">
           <ul class="product__params">
-            {{#each params}}
-              {{#with this as |param|}}
-                {{#ifEquals param.type "checkboxes"}}
-                  <li>
-                    <h3 class="product__params-title">{{ param.label }}</h3>
-                    {{#each param.options}}
-                      <div class="checkbox">
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="{{@../key}}"
-                            value="{{@key}}"
-                            data-price="{{price}}"
-                            id="{{@key}}"
-                            {{#if default}}checked{{/if}}>
-                          <span class="checkbox__checkmark"></span>
-                          {{ label }} (${{ price }})
-                        </label>
-                      </div>
-                    {{/each}}
-                  </li>
-                {{/ifEquals}}
-          
-                {{#ifEquals param.type "radios"}}
-                  <li>
-                    <h3 class="product__params-title">{{ param.label }}</h3>
-                    {{#each param.options}}
-                      <div class="checkbox checkbox--round">
-                        <label>
-                          {{ label }} (${{ price }})
-                          <input
-                            type="radio"
-                            name="{{@../key}}"
-                            value="{{@key}}"
-                            data-price="{{price}}"
-                            id="{{@key}}"
-                            {{#if default}}checked{{/if}}>
-                          <span class="checkbox__checkmark"></span>
-                        </label>
-                      </div>
-                    {{/each}}
-                  </li>
-                {{/ifEquals}}
-          
-                {{#ifEquals param.type "select"}}
-                  <li>
-                    <h3 class="product__params-title">{{ param.label }}</h3>
-                    <select name="{{@key}}">
-                      {{#each param.options}}
-                        <option value="{{@key}}" data-price="{{price}}" {{#if default}}selected{{/if}}>
-                          {{ label }} (${{ price }})
-                        </option>
-                      {{/each}}
-                    </select>
-                  </li>
-                {{/ifEquals}}
-              {{/with}}
-            {{/each}}
+            {{#each params as |param paramId|}}
+  {{#ifEquals param.type "checkboxes"}}
+    <li>
+      <h3 class="product__params-title">{{ param.label }}</h3>
+      {{#each param.options as |option optionId|}}
+        <div class="checkbox">
+          <label>
+            <input
+              type="checkbox"
+              name="{{paramId}}"
+              value="{{optionId}}"
+              data-price="{{option.price}}"
+              id="{{paramId}}-{{optionId}}"
+              {{#if option.default}}checked{{/if}}>
+            <span class="checkbox__checkmark"></span>
+            {{ option.label }} (${{ option.price }})
+          </label>
+        </div>
+      {{/each}}
+    </li>
+  {{/ifEquals}}
+
+  {{#ifEquals param.type "radios"}}
+    <li>
+      <h3 class="product__params-title">{{ param.label }}</h3>
+      {{#each param.options as |option optionId|}}
+        <div class="checkbox checkbox--round">
+          <label>
+            {{ option.label }} (${{ option.price }})
+            <input
+              type="radio"
+              name="{{paramId}}"
+              value="{{optionId}}"
+              data-price="{{option.price}}"
+              id="{{paramId}}-{{optionId}}"
+              {{#if option.default}}checked{{/if}}>
+            <span class="checkbox__checkmark"></span>
+          </label>
+        </div>
+      {{/each}}
+    </li>
+  {{/ifEquals}}
+
+  {{#ifEquals param.type "select"}}
+    <li>
+      <h3 class="product__params-title">{{ param.label }}</h3>
+      <select name="{{paramId}}">
+        {{#each param.options as |option optionId|}}
+          <option value="{{optionId}}" data-price="{{option.price}}" {{#if option.default}}selected{{/if}}>
+            {{ option.label }} (${{ option.price }})
+          </option>
+        {{/each}}
+      </select>
+    </li>
+  {{/ifEquals}}
+{{/each}}
           </ul>
           <div class="amount"> <!-- controls -->
             <div class="widget-amount"> <!-- widget-amount -->
@@ -138,7 +136,7 @@
               <a class="btn-quantity" href="#more"><i class="fas fa-plus"></i></a>
             </div>
             <p class="product__total-price">
-              Total: $<span class="price">{{{ price }}}</span>
+              Total: $<span class="price"></span>
             </p>
             <div> <!-- add-to-cart -->
               <a class="btn-primary" href="#add-to-cart">Add to cart</a>

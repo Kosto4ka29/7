@@ -10,7 +10,8 @@ const select = {
     menu: '#product-list', // kontener dla listy produktów
   },
   menuProduct: {
-    imageWrapper: '.product_images',
+    imageWrapper: '.product__images',
+
   },
 };
 
@@ -101,54 +102,57 @@ class Product {
   updatePrice() {
     const thisProduct = this;
   
+    const form = thisProduct.element.querySelector('.product__order');
+    const formData = utils.serializeFormToObject(form);
+  
     let newPrice = thisProduct.basePrice;
   
-    const formData = utils.serializeFormToObject(thisProduct.element);
+    // ⬇️ Tylko jeśli są opcje (np. checkboxy, radio)
+    if (thisProduct.data.params) {
+      for (let paramId in thisProduct.data.params) {
+        const param = thisProduct.data.params[paramId];
   
-    for (let paramId in thisProduct.data.params) {
-      const param = thisProduct.data.params[paramId];
+        for (let optionId in param.options) {
+          const option = param.options[optionId];
   
-      for (let optionId in param.options) {
-        const option = param.options[optionId];
+          const optionSelected = formData[paramId] && (
+            (Array.isArray(formData[paramId]) && formData[paramId].includes(optionId)) ||
+            formData[paramId] === optionId
+          );
   
-        const optionSelected = formData[paramId] && (
-          (Array.isArray(formData[paramId]) && formData[paramId].includes(optionId)) ||
-          formData[paramId] === optionId
-        );
+          if (optionSelected && !option.default) {
+            newPrice += option.price;
+          } else if (!optionSelected && option.default) {
+            newPrice -= option.price;
+          }
   
-        // Cena
-        if (optionSelected && !option.default) {
-          newPrice += option.price;
-        } else if (!optionSelected && option.default) {
-          newPrice -= option.price;
-        }
+          if (thisProduct.imageWrapper) {
+            const imageClass = `.${paramId}-${optionId}`;
+            const image = thisProduct.imageWrapper.querySelector(imageClass);
   
-        // Obrazki
-        if (thisProduct.imageWrapper) {
-          const imageClass = `.${paramId}-${optionId}`;
-          const image = thisProduct.imageWrapper.querySelector(imageClass);
-  
-          if (image) {
-            if (optionSelected) {
-              image.classList.add('active');
-            } else {
-              image.classList.remove('active');
+            if (image) {
+              if (optionSelected) {
+                image.classList.add('active');
+              } else {
+                image.classList.remove('active');
+              }
             }
           }
         }
       }
     }
   
+    const amount = parseInt(formData.amount) || 1;
+    newPrice *= amount;
   
-  
-    // Aktualizacja ceny na stronie
     const priceElement = thisProduct.element.querySelector('.product__total-price .price');
-    priceElement.textContent = newPrice.toFixed(2);
+    if (priceElement) {
+      priceElement.textContent = newPrice.toFixed(2);
+    }
   
-    // Zapamiętujemy dodatkową cenę z opcji
-    thisProduct.optionsPrice = newPrice - thisProduct.basePrice;
+    thisProduct.optionsPrice = newPrice - (thisProduct.basePrice * amount);
   }
-} 
+}  
 
 // Klasa dla aplikacji
 const app = {
