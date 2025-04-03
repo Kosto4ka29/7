@@ -50,5 +50,8 @@ Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
 });
 
 Handlebars.registerHelper('joinValues', function(input, options) {
+  if (!input || typeof input !== 'object') {
+    return '';
+  }
   return Object.values(input).join(options.fn(this));
 });
