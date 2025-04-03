@@ -265,7 +265,7 @@ app.cart.add(productSummary);
   const productSummary = {
     id: thisProduct.id,
     name: thisProduct.data.name,
-    amount: thisProduct.amountWidget.getValue(),
+    amount: thisProduct.amountWidget ? thisProduct.amountWidget.getValue() : 1,
     priceSingle: thisProduct.priceSingle,
     price: thisProduct.priceSingle * thisProduct.amountWidget.getValue(),
     params: thisProduct.prepareCartProductParams(),
@@ -408,7 +408,7 @@ class Cart{
 
     thisCart.dom.wrapper = element;
     thisCart.dom.productList = thisCart.dom.wrapper.querySelector(select.cart.productList);
-    thisCart.dom.totalPrice = thisCart.dom.wrapper.querySelector('.cart__order-price-sum strong');
+    thisCart.dom.totalPrice = thisCart.dom.wrapper.querySelectorAll(select.cart.totalPrice);
     thisCart.dom.subtotalPrice = thisCart.dom.wrapper.querySelector('.cart__order-subtotal strong');
     thisCart.dom.totalNumber = thisCart.dom.wrapper.querySelector('.cart__total-number');
     thisCart.dom.deliveryFee = thisCart.dom.wrapper.querySelectorAll('.cart__order-price-sum')[1];
@@ -438,11 +438,14 @@ class Cart{
       subtotalPrice += product.price;
     }
   
-    const deliveryFee = totalNumber > 0 ? settings.cart.defaultDeliveryFee : 0;
+    const deliveryFee = 0;
     const totalPrice = subtotalPrice + deliveryFee;
   
     thisCart.dom.totalNumber.innerHTML = totalNumber;
-    thisCart.dom.totalPrice.innerHTML = totalPrice;
+    for (let elem of thisCart.dom.totalPrice) {
+      elem.innerHTML = totalPrice;
+    }
+    
     thisCart.dom.subtotalPrice.innerHTML = subtotalPrice;
     thisCart.dom.deliveryFee.innerHTML = deliveryFee;
   }
@@ -450,21 +453,21 @@ class Cart{
   add(menuProduct) {
     const thisCart = this;
   
-    // 1. Wygeneruj HTML na podstawie szablonu i przekazanego produktu
     const generatedHTML = templates.cartProduct(menuProduct);
-  
-    // 2. Zamień HTML na element DOM
     const generatedDOM = utils.createDOMFromHTML(generatedHTML);
   
-    // 3. Dodaj wygenerowany element do listy produktów w koszyku
     thisCart.dom.productList.appendChild(generatedDOM);
   
-    // 4. Zapamiętaj produkt w tablicy produktów
-    thisCart.products.push(menuProduct);
+    // Upewnij się, że menuProduct ma amount i price (można też tworzyć klasę CartProduct)
+    const cartProduct = {
+      ...menuProduct,
+      dom: generatedDOM
+    };
   
-    // 5. Zaktualizuj liczby w koszyku
+    thisCart.products.push(cartProduct);
     thisCart.update();
   }
+  
   
   
 }
