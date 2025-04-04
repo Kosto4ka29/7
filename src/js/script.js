@@ -1,4 +1,4 @@
-/* global dataSource */
+
 /* global utils */
 
 
@@ -78,6 +78,11 @@ const settings = {
     defaultDeliveryFee: 20,
   },
   // CODE ADDED END
+  db: {
+    url: 'http://localhost:3131',
+    products: 'products',
+    orders: 'orders',
+  },
 };
 
 const templates = {
@@ -241,7 +246,11 @@ class Product {
   }
   addToCart(){
   const productSummary = this.prepareCartProduct();
-app.cart.add(productSummary);
+  app.cart.add(productSummary);
+    this.element.querySelector(select.menuProduct.form).reset();
+    this.amountWidget.setValue(settings.amountWidget.defaultValue);
+    this.updatePrice();
+
 
 }
   initOrderForm() {
@@ -435,9 +444,51 @@ class Cart{
     thisCart.dom.productList.addEventListener('remove', function (event) {
       thisCart.remove(event.detail.cartProduct);
     });
-  }
-  
 
+    thisCart.dom.form.addEventListener('submit', function(event) {
+      event.preventDefault(); // zablokuj przeładowanie strony
+      thisCart.sendOrder();   // wyślij zamówienie
+    });
+    
+  }
+  sendOrder() {
+    const thisCart = this;
+    const url = settings.db.url + '/' + settings.db.orders;
+  
+    const payload = {
+      address: thisCart.dom.address.value,
+      phone: thisCart.dom.phone.value,
+      totalPrice: parseInt(thisCart.dom.totalPrice[0].innerHTML),
+      subtotalPrice: parseInt(thisCart.dom.subtotalPrice.innerHTML),
+      totalNumber: parseInt(thisCart.dom.totalNumber.innerHTML),
+      deliveryFee: parseInt(thisCart.dom.deliveryFee.innerHTML),
+      products: [],
+    };
+  
+    for(let product of thisCart.products) {
+      payload.products.push(product.getData()); // metoda z CartProduct
+    }
+  
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    };
+  
+    fetch(url, options)
+      .then(response => response.json())
+      .then(parsedResponse => {
+        console.log('Zamówienie wysłane:', parsedResponse);
+      });
+
+      // Wyczyść zawartość koszyka po złożeniu zamówienia
+      thisCart.products = [];
+      thisCart.dom.productList.innerHTML = '';
+      thisCart.update();
+
+  }
   update() {
     const thisCart = this;
   
@@ -547,6 +598,18 @@ class CartProduct {
 
   thisCartProduct.dom.wrapper.dispatchEvent(event);
 }
+getData() {
+  const thisCartProduct = this;
+
+  return {
+    id: thisCartProduct.id,
+    name: thisCartProduct.name,
+    amount: thisCartProduct.amount,
+    price: thisCartProduct.price,
+    priceSingle: thisCartProduct.priceSingle,
+    params: thisCartProduct.params,
+  };
+}
 }
 
   
@@ -560,8 +623,20 @@ const app = {
   initData: function () {
     const thisApp = this;
 
-    // Załadowanie danych z dataSource
-    thisApp.data = dataSource;
+    thisApp.data ={};
+    const url = settings.db.url + '/' + settings.db.products;
+  
+    fetch(url)
+      .then((rawResponse) => rawResponse.json())
+      .then((parsedResponse) => {
+        thisApp.data = parsedResponse;
+        console.log('parsedResponse', parsedResponse);
+
+        thisApp.data.products = parsedResponse;
+  
+        thisApp.initMenu(); // przenieś tu uruchamianie menu
+      });
+
   },
 
   // Funkcja inicjalizująca menu
@@ -569,9 +644,10 @@ const app = {
     const thisApp = this;
 
     // Iteracja po wszystkich produktach i tworzenie instancji klasy Product
-    for (let productId in thisApp.data.products) {
-      new Product(productId, thisApp.data.products[productId]);
+    for (let productData of thisApp.data.products) {
+      new Product(productData.id, productData);
     }
+    
   },
 
   initCart(){
@@ -584,10 +660,9 @@ const app = {
   // Funkcja inicjalizująca aplikację
   init: function () {
     const thisApp = this;
-
-    thisApp.initData(); // Inicjalizacja danych
-    thisApp.initMenu();
-    thisApp.initCart(); // Inicjalizacja menu
+  
+    thisApp.initCart();
+    thisApp.initData(); // initMenu zostanie wywołane później
   },
 };
 
