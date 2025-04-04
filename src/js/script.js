@@ -240,8 +240,6 @@ class Product {
     }
   }
   addToCart(){
-  const thisProduct = this;
-
   const productSummary = this.prepareCartProduct();
 app.cart.add(productSummary);
 
@@ -476,7 +474,7 @@ class Cart{
   
     thisCart.update();
   }
-  
+
   remove(cartProduct) {
     const thisCart = this;
   
