@@ -43,6 +43,10 @@ const app = {
         window.location.hash='#/'+id;
       })
     }
+    window.addEventListener('hashchange', () => {
+      const newHash = window.location.hash.replace('#/', '');
+      thisApp.activatePage(newHash);
+    });
   },
 
   activatePage:function(pageId){
@@ -58,10 +62,7 @@ const app = {
         // page.classList.remove(classList.pages.active);
         link.classList.toggle(classNames.nav.active, link.getAttribute('href')=="#"+pageId)
    }
-   window.addEventListener('hashchange', () => {
-    const newHash = window.location.hash.replace('#/', '');
-    thisApp.activatePage(newHash);
-  });
+   
   },
 
   initMenu: function (){
